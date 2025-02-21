@@ -76,16 +76,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     children: [
                       CircleAvatar(
                         radius: 50,
-                        backgroundImage: user?.photoUrl != null
-                            ? NetworkImage(user!.photoUrl!)
+                        backgroundImage: user?.photoURL != null
+                            ? NetworkImage(user!.photoURL!)
                             : null,
-                        child: user?.photoUrl == null
+                        child: user?.photoURL == null
                             ? const Icon(Icons.person, size: 50)
                             : null,
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        user?.name ?? '',
+                        user?.displayName ?? '',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       Text(

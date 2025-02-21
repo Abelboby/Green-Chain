@@ -123,6 +123,31 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updateUserData(Map<String, dynamic> data) async {
+    if (_user == null) return;
+
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _firestore
+          .collection('users')
+          .doc(_user!.uid)
+          .update({
+            ...data,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+
+      _userData = {...?_userData, ...data};
+    } catch (e) {
+      debugPrint('Error updating user data: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> signOut() async {
     try {
       _isLoading = true;
