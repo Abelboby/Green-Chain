@@ -62,7 +62,7 @@ class LoginScreen extends StatelessWidget {
                 
                 // App Name
                 Text(
-                  'Green Token',
+                  'Green Chain',
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.primaryGreen,

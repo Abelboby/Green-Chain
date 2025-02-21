@@ -29,7 +29,7 @@ class HomeScreen extends StatelessWidget {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Green Token'),
+        title: const Text('Green Chain'),
         actions: [
           if (isLoading)
             const Center(
