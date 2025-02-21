@@ -1,104 +1,148 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:web3dart/web3dart.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../wallet/providers/wallet_provider.dart';
+import '../../../wallet/widgets/import_wallet_dialog.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
+
+  void _importWallet(BuildContext context) async {
+    final privateKey = await showDialog<String>(
+      context: context,
+      builder: (context) => const ImportWalletDialog(),
+    );
+
+    if (privateKey != null && context.mounted) {
+      try {
+        await context.read<WalletProvider>().importWallet(privateKey);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  String _formatBalance(EtherAmount? balance) {
+    if (balance == null) return '0.00 ETH';
+    final inWei = balance.getInWei;
+    final inEther = inWei.toDouble() / BigInt.from(10).pow(18).toDouble();
+    return '${inEther.toStringAsFixed(4)} ETH';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Green Token'),
+        title: const Text('Green Chain'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.account_balance_wallet_outlined),
-            onPressed: () {
-              // TODO: Implement wallet connection
+          Consumer<WalletProvider>(
+            builder: (context, walletProvider, _) {
+              if (walletProvider.isLoading) {
+                return const Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  ),
+                );
+              }
+              return IconButton(
+                icon: Icon(
+                  walletProvider.hasWallet
+                      ? Icons.account_balance_wallet
+                      : Icons.account_balance_wallet_outlined,
+                ),
+                onPressed: () => walletProvider.hasWallet
+                    ? walletProvider.refreshBalance()
+                    : _importWallet(context),
+                tooltip: walletProvider.hasWallet
+                    ? 'Refresh Balance'
+                    : 'Import Wallet',
+              );
             },
           ),
         ],
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Total Balance',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        '1,234.56 GT',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
+      body: Consumer<WalletProvider>(
+        builder: (context, walletProvider, _) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.eco,
-                            color: Colors.green,
-                          ),
-                          const SizedBox(width: 8),
                           const Text(
-                            'CO₂ Saved: 45.6 kg',
+                            'Balance',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.green,
+                              color: Colors.grey,
                             ),
                           ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _formatBalance(walletProvider.balance),
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (!walletProvider.hasWallet) ...[
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: () => _importWallet(context),
+                              icon: const Icon(Icons.add),
+                              label: const Text('Import Wallet'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryGreen,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Recent Transactions',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: 5, // Placeholder count
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      leading: const CircleAvatar(
-                        backgroundColor: Colors.green,
-                        child: Icon(Icons.swap_horiz, color: Colors.white),
-                      ),
-                      title: Text('Transaction ${index + 1}'),
-                      subtitle: Text('${DateTime.now().subtract(Duration(days: index)).toString().split('.')[0]}'),
-                      trailing: Text(
-                        '${index % 2 == 0 ? '+' : '-'}${(index + 1) * 10.0} GT',
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Recent Activity',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        walletProvider.hasWallet
+                            ? 'No transactions yet'
+                            : 'Import a wallet to view transactions',
                         style: TextStyle(
-                          color: index % 2 == 0 ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.bold,
+                          color: AppColors.textSecondaryLight,
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
