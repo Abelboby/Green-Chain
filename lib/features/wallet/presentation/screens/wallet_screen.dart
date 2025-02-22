@@ -7,6 +7,7 @@ import '../../widgets/import_wallet_dialog.dart';
 import '../../../report/presentation/screens/report_submission_screen.dart';
 import '../../../report/presentation/screens/user_reports_screen.dart';
 import '../../../report/presentation/screens/public_reports_screen.dart';
+import '../../../auth/widgets/wave_background.dart';
 
 class WalletScreen extends StatelessWidget {
   const WalletScreen({Key? key}) : super(key: key);
@@ -104,125 +105,142 @@ class WalletScreen extends StatelessWidget {
               children: [
                 // Wallet Section
                 Container(
+                  height: 220,
                   margin: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primaryGreen.withOpacity(0.8),
-                        AppColors.primaryGreen,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryGreen.withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
+                  child: Stack(
+                    children: [
+                      // Gradient Container with Wave Background
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.primaryGreen.withOpacity(0.8),
+                                AppColors.primaryGreen,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primaryGreen.withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: WaveBackground(
+                              child: const SizedBox.shrink(),
+                            ),
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      // Content
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Icon(
-                                  Icons.account_balance_wallet,
-                                  color: Colors.white.withOpacity(0.9),
-                                  size: 28,
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.account_balance_wallet,
+                                      color: Colors.white.withOpacity(0.9),
+                                      size: 28,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Wallet Balance',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Wallet Balance',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.9),
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
+                                if (walletProvider.hasWallet)
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.logout,
+                                      color: Colors.white.withOpacity(0.9),
+                                    ),
+                                    onPressed: () => walletProvider.removeWallet(),
+                                    tooltip: 'Disconnect Wallet',
                                   ),
-                                ),
                               ],
                             ),
-                            if (walletProvider.hasWallet)
-                              IconButton(
-                                icon: Icon(
-                                  Icons.logout,
-                                  color: Colors.white.withOpacity(0.9),
+                            if (walletProvider.hasWallet) ...[
+                              const Spacer(),
+                              Text(
+                                _formatBalance(walletProvider.balance),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                onPressed: () => walletProvider.removeWallet(),
-                                tooltip: 'Disconnect Wallet',
                               ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${walletProvider.address?.substring(0, 6)}...${walletProvider.address?.substring(38)}',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.8),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ] else ...[
+                              const Spacer(),
+                              const Text(
+                                'Connect your wallet to start reporting environmental issues',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: () => _importWallet(context),
+                                icon: const Icon(Icons.add),
+                                label: const Text(
+                                  'Import Wallet',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: AppColors.primaryGreen,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
-                        if (walletProvider.hasWallet) ...[
-                          const SizedBox(height: 16),
-                          Text(
-                            _formatBalance(walletProvider.balance),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '${walletProvider.address?.substring(0, 6)}...${walletProvider.address?.substring(38)}',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ] else ...[
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Connect your wallet to start reporting environmental issues',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: () => _importWallet(context),
-                            icon: const Icon(Icons.add),
-                            label: const Text(
-                              'Import Wallet',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: AppColors.primaryGreen,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
 
