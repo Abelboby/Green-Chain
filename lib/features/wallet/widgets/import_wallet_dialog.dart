@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import 'wallet_qr_scanner.dart';
 
 class ImportWalletDialog extends StatefulWidget {
   const ImportWalletDialog({super.key});
@@ -11,6 +12,24 @@ class ImportWalletDialog extends StatefulWidget {
 class _ImportWalletDialogState extends State<ImportWalletDialog> {
   final _privateKeyController = TextEditingController();
   bool _isPrivateKeyValid = true;
+
+  void _handleQRScan() async {
+    final privateKey = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WalletQRScanner(
+          onDetect: (value) => value,
+        ),
+      ),
+    );
+
+    if (privateKey != null) {
+      setState(() {
+        _privateKeyController.text = privateKey;
+        _isPrivateKeyValid = true;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,15 +45,28 @@ class _ImportWalletDialogState extends State<ImportWalletDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
-            controller: _privateKeyController,
-            decoration: InputDecoration(
-              labelText: 'Private Key',
-              errorText: _isPrivateKeyValid ? null : 'Invalid private key',
-              border: const OutlineInputBorder(),
-              prefixIcon: const Icon(Icons.key),
-            ),
-            maxLines: 2,
+          Stack(
+            alignment: Alignment.centerRight,
+            children: [
+              TextField(
+                controller: _privateKeyController,
+                decoration: InputDecoration(
+                  labelText: 'Private Key',
+                  errorText: _isPrivateKeyValid ? null : 'Invalid private key',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.key),
+                ),
+                maxLines: 2,
+              ),
+              Positioned(
+                right: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.qr_code_scanner),
+                  onPressed: _handleQRScan,
+                  tooltip: 'Scan QR Code',
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           const Text(
