@@ -5,7 +5,7 @@ class AppConstants {
 
   // Blockchain Configuration
   static const String rpcUrl = 'https://sepolia.infura.io/v3/8daf643dc55444bc8a73d8b854318094';
-  static const String contractAddress = '0x97F4dcd69eB75C80ED0256Eaa2Ce3e28fb414f5f'; // Replace with your contract address
+  static const String contractAddress = '0xddED014B151F3BAfc628685F7Af02D0948Fb7317'; // Replace with your contract address
 
   // Smart Contract ABI
   static const String contractAbi = '''
