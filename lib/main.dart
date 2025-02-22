@@ -10,6 +10,7 @@ import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/screens/auth_wrapper.dart';
 import 'features/wallet/providers/wallet_provider.dart';
 import 'features/report/providers/reports_provider.dart';
+import 'features/events/providers/events_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +50,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => WalletProvider(walletService)),
         ChangeNotifierProvider(create: (_) => ReportsProvider(contractService)),
+        ChangeNotifierProvider(create: (_) => EventsProvider()),
       ],
       child: MaterialApp(
         title: 'Green Chain',

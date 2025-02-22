@@ -76,7 +76,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: const Icon(Icons.login),
                     label: const Text(
                       'Sign in with Google',
-                      style: TextStyle(
+                    style: TextStyle(
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.5,
                       ),
@@ -293,9 +293,9 @@ class ProfileScreen extends StatelessWidget {
                         'Sign out of your account',
                         () => authProvider.signOut(),
                         isDestructive: true,
-                      ),
-                    ],
                   ),
+                ],
+              ),
                 ),
               ],
             ),
