@@ -15,6 +15,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
+import '../../../waste/presentation/screens/waste_pickup_screen.dart';
+import '../../../waste/presentation/screens/collection_centers_screen.dart';
+import '../../../waste/presentation/screens/waste_guide_screen.dart';
+import '../../../waste/providers/waste_provider.dart';
+import '../../../waste/models/index.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -111,35 +116,33 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       _buildActionButton(
                         context,
-                        'View Public Reports',
-                        Icons.public,
-                        'See what others are reporting',
+                        'Schedule Waste Pickup',
+                        Icons.schedule,
+                        'Request doorstep collection service',
                         () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const PublicReportsScreen(),
+                              builder: (context) => const WastePickupScreen(),
                             ),
                           );
                         },
                       ),
-                      if (walletProvider.hasWallet) ...[
-                        const Divider(height: 1),
-                        _buildActionButton(
-                          context,
-                          'My Reports',
-                          Icons.person,
-                          'View your submitted reports',
-                          () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const UserReportsScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
+                      const Divider(height: 1),
+                      _buildActionButton(
+                        context,
+                        'Waste Collection Centers',
+                        Icons.recycling,
+                        'Find and navigate to nearby centers',
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CollectionCentersScreen(),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -270,10 +273,12 @@ class _CompactEventMapState extends State<CompactEventMap> {
   final Set<Marker> _markers = {};
   Position? _currentPosition;
   bool _isLoading = true;
+  late final WasteProvider _wasteProvider;
 
   @override
   void initState() {
     super.initState();
+    _wasteProvider = Provider.of<WasteProvider>(context, listen: false);
     _initializeMap();
   }
 
@@ -346,6 +351,19 @@ class _CompactEventMapState extends State<CompactEventMap> {
     }
   }
 
+  Future<void> _loadCollectionCenters() async {
+    try {
+      await _wasteProvider.loadCollectionCenters();
+      if (mounted) {
+        setState(() {
+          _createMarkers();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading collection centers: $e');
+    }
+  }
+
   void _createMarkers() {
     _markers.clear();
     
@@ -369,18 +387,16 @@ class _CompactEventMapState extends State<CompactEventMap> {
     for (var event in widget.events) {
       try {
         final data = event.data() as Map<String, dynamic>;
-        // Use coordinates instead of location for GeoPoint
         final GeoPoint coordinates = data['coordinates'] as GeoPoint;
         final DateTime eventDate = (data['date'] as Timestamp).toDate();
         
-        // Choose color based on event status
         double markerHue;
         if (eventDate.day == DateTime.now().day) {
-          markerHue = BitmapDescriptor.hueGreen; // Today's events
+          markerHue = BitmapDescriptor.hueGreen;
         } else if (eventDate.isAfter(DateTime.now())) {
-          markerHue = BitmapDescriptor.hueOrange; // Upcoming events
+          markerHue = BitmapDescriptor.hueOrange;
         } else {
-          markerHue = BitmapDescriptor.hueRed; // Past events
+          markerHue = BitmapDescriptor.hueRed;
         }
 
         _markers.add(
@@ -396,9 +412,30 @@ class _CompactEventMapState extends State<CompactEventMap> {
             zIndex: 0,
           ),
         );
-        debugPrint('Added marker for event: ${data['title']} at ${coordinates.latitude}, ${coordinates.longitude}');
       } catch (e) {
-        debugPrint('Error creating marker for event: $e');
+        debugPrint('Error creating event marker: $e');
+      }
+    }
+
+    // Add collection center markers
+    for (var center in _wasteProvider.centers) {
+      try {
+        _markers.add(
+          Marker(
+            markerId: MarkerId('center_${center.id}'),
+            position: LatLng(
+              center.location.latitude,
+              center.location.longitude,
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+            infoWindow: InfoWindow(
+              title: center.name,
+              snippet: '${center.isOpen ? 'Open' : 'Closed'} • ${center.capacityPercentage.round()}% full',
+            ),
+          ),
+        );
+      } catch (e) {
+        debugPrint('Error creating center marker: $e');
       }
     }
   }
@@ -477,21 +514,96 @@ class _CompactEventMapState extends State<CompactEventMap> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Event Title
               Text(
                 data['title'] ?? 'Event',
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: AppColors.primaryGreen,
                 ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Location
+              Row(
+                children: [
+                  const Icon(
+                    Icons.location_on,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      data['location'] ?? 'Location not specified',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
-              Text(data['description'] ?? ''),
+
+              // Date and Time
+              Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatDate(data['date']),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Icon(
+                    Icons.access_time,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${_formatTime(data['startTime'])} - ${_formatTime(data['endTime'])}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
-              Text(
-                'Date: ${_formatDate(data['date'])}',
-                style: const TextStyle(fontWeight: FontWeight.w500),
+
+              // Volunteers Count
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.people,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${(data['volunteerIds'] as List?)?.length ?? 0}/${data['maxVolunteers'] ?? 0} volunteers',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
+
+              // View Details Button
               ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pop(context);
@@ -511,6 +623,10 @@ class _CompactEventMapState extends State<CompactEventMap> {
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
                   ),
                 ),
               ),
@@ -541,6 +657,14 @@ class _CompactEventMapState extends State<CompactEventMap> {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
     return 'Date not set';
+  }
+
+  String _formatTime(dynamic time) {
+    if (time is Timestamp) {
+      final DateTime dateTime = time.toDate();
+      return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    }
+    return '--:--';
   }
 
   void _showExpandedMap() {
