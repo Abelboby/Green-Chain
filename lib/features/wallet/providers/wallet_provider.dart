@@ -18,6 +18,7 @@ class WalletProvider extends ChangeNotifier {
   String? get address => _address;
   EtherAmount? get balance => _balance;
   bool get isLoading => _isLoading;
+  Credentials? get credentials => _credentials;
 
   Future<void> _initWallet() async {
     final privateKey = await _walletService.getStoredPrivateKey();

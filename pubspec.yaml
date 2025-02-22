@@ -50,6 +50,10 @@ dependencies:
   url_launcher: ^6.2.4
   shared_preferences: ^2.2.2
   http: ^1.2.0
+  dio: ^5.4.0
+  image_picker: ^1.0.7
+  geolocator: ^10.1.0
+  path: ^1.8.3
 
 dev_dependencies:
   flutter_test:

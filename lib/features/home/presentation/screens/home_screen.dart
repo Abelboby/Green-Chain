@@ -4,6 +4,7 @@ import 'package:web3dart/web3dart.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../wallet/providers/wallet_provider.dart';
 import '../../../wallet/widgets/import_wallet_dialog.dart';
+import '../../../report/presentation/screens/report_submission_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -72,6 +73,25 @@ class HomeScreen extends StatelessWidget {
             },
           ),
         ],
+      ),
+      floatingActionButton: Consumer<WalletProvider>(
+        builder: (context, walletProvider, _) {
+          if (!walletProvider.hasWallet) return const SizedBox.shrink();
+          
+          return FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ReportSubmissionScreen(),
+                ),
+              );
+            },
+            backgroundColor: AppColors.primaryGreen,
+            icon: const Icon(Icons.add_photo_alternate),
+            label: const Text('Report Issue'),
+          );
+        },
       ),
       body: Consumer<WalletProvider>(
         builder: (context, walletProvider, _) {
