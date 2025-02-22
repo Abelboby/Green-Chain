@@ -5,6 +5,7 @@ import '../../../wallet/providers/wallet_provider.dart';
 import '../../../report/presentation/screens/report_submission_screen.dart';
 import '../../../report/presentation/screens/user_reports_screen.dart';
 import '../../../report/presentation/screens/public_reports_screen.dart';
+import '../../../report/providers/reports_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -50,13 +51,13 @@ class HomeScreen extends StatelessWidget {
           );
         },
       ),
-      body: Consumer<WalletProvider>(
-        builder: (context, walletProvider, _) {
+      body: Consumer2<WalletProvider, ReportsProvider>(
+        builder: (context, walletProvider, reportsProvider, _) {
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Welcome Section
+                // Impact Stats Section
                 Container(
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(24),
@@ -81,20 +82,91 @@ class HomeScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Welcome to Green Chain',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.eco,
+                            color: Colors.white.withOpacity(0.9),
+                            size: 28,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Environmental Impact',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Help make our environment better by reporting environmental issues in your area.',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 16,
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildImpactStat(
+                              context,
+                              reportsProvider.reports.length.toString(),
+                              'Total Reports',
+                              Icons.description_outlined,
+                            ),
+                          ),
+                          Container(
+                            height: 50,
+                            width: 1,
+                            color: Colors.white24,
+                          ),
+                          Expanded(
+                            child: _buildImpactStat(
+                              context,
+                              reportsProvider.reports.where((r) => r.verified).length.toString(),
+                              'Verified',
+                              Icons.verified_outlined,
+                            ),
+                          ),
+                          Container(
+                            height: 50,
+                            width: 1,
+                            color: Colors.white24,
+                          ),
+                          Expanded(
+                            child: _buildImpactStat(
+                              context,
+                              '${(reportsProvider.reports.where((r) => r.verified).length / (reportsProvider.reports.isEmpty ? 1 : reportsProvider.reports.length) * 100).toStringAsFixed(0)}%',
+                              'Success Rate',
+                              Icons.trending_up,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.info_outline,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Join our community in making a difference. Report environmental issues in your area.',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -157,6 +229,41 @@ class HomeScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildImpactStat(
+    BuildContext context,
+    String value,
+    String label,
+    IconData icon,
+  ) {
+    return Column(
+      children: [
+        Icon(
+          icon,
+          color: Colors.white,
+          size: 24,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.8),
+            fontSize: 12,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 
