@@ -54,7 +54,7 @@ class _EventsScreenState extends State<EventsScreen> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    'assets/images/cleanup_banner.jpg',
+                    'assets/images/cleanup_banner.png',
                     fit: BoxFit.cover,
                   ),
                   Container(

@@ -87,4 +87,26 @@ class CleanUpEvent {
   double get volunteerProgress => maxVolunteers > 0 
       ? volunteerIds.length / maxVolunteers 
       : 0.0;
+
+  factory CleanUpEvent.fromMap(Map<String, dynamic> data, String id) {
+    final now = DateTime.now();
+    return CleanUpEvent(
+      id: id,
+      title: data['eventName'] ?? '',
+      description: data['description'] ?? '',
+      date: (data['eventDate'] as Timestamp).toDate(),
+      startTime: (data['startTime'] as Timestamp).toDate(),
+      endTime: (data['endTime'] as Timestamp).toDate(),
+      location: data['address'] ?? '',
+      organizerId: data['organizerId'] ?? '',
+      organizerName: data['organizerName'] ?? 'Unknown Organizer',
+      volunteerIds: List<String>.from(data['volunteers'] ?? []),
+      maxVolunteers: data['maxVolunteers'] ?? 10,
+      equipmentNeeded: List<String>.from(data['equipmentNeeded'] ?? []),
+      coordinates: data['location'] as GeoPoint,
+      status: data['status'] ?? 'upcoming',
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? now,
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? now,
+    );
+  }
 } 

@@ -92,7 +92,7 @@ class EventDetailsScreen extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    'assets/images/cleanup_event.jpg',
+                    'assets/images/cleanup_event.png',
                     fit: BoxFit.cover,
                   ),
                   Container(
