@@ -4,9 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/wallet_service.dart';
+import 'core/services/contract_service.dart';
+import 'core/constants/app_constants.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/screens/auth_wrapper.dart';
 import 'features/wallet/providers/wallet_provider.dart';
+import 'features/report/providers/reports_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,21 +17,29 @@ void main() async {
   
   final prefs = await SharedPreferences.getInstance();
   final walletService = WalletService(prefs);
+  final contractService = ContractService(
+    rpcUrl: AppConstants.rpcUrl,
+    contractAddress: AppConstants.contractAddress,
+    contractAbi: AppConstants.contractAbi,
+  );
 
   runApp(MyApp(
     prefs: prefs,
     walletService: walletService,
+    contractService: contractService,
   ));
 }
 
 class MyApp extends StatelessWidget {
   final SharedPreferences prefs;
   final WalletService walletService;
+  final ContractService contractService;
 
   const MyApp({
     Key? key,
     required this.prefs,
     required this.walletService,
+    required this.contractService,
   }) : super(key: key);
 
   @override
@@ -37,6 +48,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => WalletProvider(walletService)),
+        ChangeNotifierProvider(create: (_) => ReportsProvider(contractService)),
       ],
       child: MaterialApp(
         title: 'Green Chain',

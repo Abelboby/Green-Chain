@@ -5,6 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../wallet/providers/wallet_provider.dart';
 import '../../../wallet/widgets/import_wallet_dialog.dart';
 import '../../../report/presentation/screens/report_submission_screen.dart';
+import '../../../report/presentation/screens/user_reports_screen.dart';
+import '../../../report/presentation/widgets/reports_list.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -96,23 +98,35 @@ class HomeScreen extends StatelessWidget {
       body: Consumer<WalletProvider>(
         builder: (context, walletProvider, _) {
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Wallet Balance Card
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Balance',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Wallet Balance',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              if (walletProvider.hasWallet)
+                                IconButton(
+                                  icon: const Icon(Icons.refresh),
+                                  onPressed: walletProvider.refreshBalance,
+                                  tooltip: 'Refresh Balance',
+                                ),
+                            ],
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -137,29 +151,57 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Recent Activity',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        walletProvider.hasWallet
-                            ? 'No transactions yet'
-                            : 'Import a wallet to view transactions',
+                ),
+
+                // Reports Section
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Recent Reports',
                         style: TextStyle(
-                          color: AppColors.textSecondaryLight,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
+                      if (walletProvider.hasWallet)
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const UserReportsScreen(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.person),
+                          label: const Text('My Reports'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.primaryGreen,
+                          ),
+                        ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 8),
+
+                // Reports List
+                Expanded(
+                  child: walletProvider.hasWallet
+                      ? ReportsList(
+                          showUserReportsOnly: false,
+                          userAddress: walletProvider.address,
+                        )
+                      : const Center(
+                          child: Text(
+                            'Connect your wallet to view and submit reports',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                ),
+              ],
             ),
           );
         },

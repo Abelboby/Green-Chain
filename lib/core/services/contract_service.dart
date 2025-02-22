@@ -1,5 +1,6 @@
 import 'package:web3dart/web3dart.dart';
 import 'package:http/http.dart' as http;
+import '../../features/report/models/report_data.dart';
 
 class ContractService {
   final Web3Client _client;
@@ -41,6 +42,62 @@ class ContractService {
       return result;
     } catch (e) {
       throw Exception('Failed to submit report: $e');
+    }
+  }
+
+  Future<List<ReportData>> getVisibleReports() async {
+    final function = _contract.function('getVisibleReports');
+    
+    try {
+      final result = await _client.call(
+        contract: _contract,
+        function: function,
+        params: [],
+      );
+
+      return (result[0] as List<dynamic>).map((report) {
+        return ReportData(
+          id: (report[0] as BigInt).toInt(),
+          reporter: report[1].toString(),
+          description: report[2].toString(),
+          location: report[3].toString(),
+          evidenceLink: report[4].toString(),
+          verified: report[5] as bool,
+          reward: (report[6] as BigInt).toInt(),
+          timestamp: (report[7] as BigInt).toInt(),
+          visibility: report[8] as bool,
+        );
+      }).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch reports: $e');
+    }
+  }
+
+  Future<List<ReportData>> getReportsByAddress(String address) async {
+    final function = _contract.function('getReportsByAddress');
+    
+    try {
+      final result = await _client.call(
+        contract: _contract,
+        function: function,
+        params: [EthereumAddress.fromHex(address)],
+      );
+
+      return (result[0] as List<dynamic>).map((report) {
+        return ReportData(
+          id: (report[0] as BigInt).toInt(),
+          reporter: report[1].toString(),
+          description: report[2].toString(),
+          location: report[3].toString(),
+          evidenceLink: report[4].toString(),
+          verified: report[5] as bool,
+          reward: (report[6] as BigInt).toInt(),
+          timestamp: (report[7] as BigInt).toInt(),
+          visibility: report[8] as bool,
+        );
+      }).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch reports: $e');
     }
   }
 
