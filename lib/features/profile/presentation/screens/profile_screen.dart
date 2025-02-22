@@ -4,6 +4,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../wallet/providers/wallet_provider.dart';
 import '../../../report/providers/reports_provider.dart';
+import 'edit_profile_screen.dart';
+import 'notifications_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -260,9 +262,11 @@ class ProfileScreen extends StatelessWidget {
                         Icons.edit,
                         'Update your profile information',
                         () {
-                          // TODO: Implement edit profile
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Coming soon!')),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const EditProfileScreen(),
+                            ),
                           );
                         },
                       ),
@@ -273,9 +277,11 @@ class ProfileScreen extends StatelessWidget {
                         Icons.notifications_outlined,
                         'Manage your notification preferences',
                         () {
-                          // TODO: Implement notifications settings
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Coming soon!')),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NotificationsScreen(),
+                            ),
                           );
                         },
                       ),

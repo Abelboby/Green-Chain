@@ -80,7 +80,27 @@ class AuthProvider extends ChangeNotifier {
         idToken: googleAuth.idToken,
       );
 
-      await _auth.signInWithCredential(credential);
+      final userCredential = await _auth.signInWithCredential(credential);
+      final user = userCredential.user;
+
+      if (user != null) {
+        // Create or update user document in Firestore
+        await _firestore.collection('users').doc(user.uid).set({
+          'email': user.email,
+          'name': user.displayName,
+          'photoURL': user.photoURL,
+          'lastLogin': FieldValue.serverTimestamp(),
+          'notifications': {
+            'report_updates': true,
+            'verification_status': true,
+            'rewards': true,
+            'community_updates': false,
+            'tips_and_news': false,
+          },
+        }, SetOptions(merge: true));
+
+        await _fetchUserData();
+      }
     } catch (e) {
       debugPrint('Error signing in with Google: $e');
       rethrow;
@@ -91,29 +111,26 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> updateProfile({
-    String? name,
-    String? walletAddress,
-    String? photoURL,
+    required String displayName,
+    String? bio,
   }) async {
-    if (_user == null) return;
+    if (_user == null) throw Exception('No user logged in');
 
     try {
       _isLoading = true;
       notifyListeners();
 
-      final updates = <String, dynamic>{
-        if (name != null) 'name': name,
-        if (walletAddress != null) 'walletAddress': walletAddress,
-        if (photoURL != null) 'photoURL': photoURL,
+      // Update Firebase Auth display name
+      await _user!.updateDisplayName(displayName);
+
+      // Update Firestore user document
+      await _firestore.collection('users').doc(_user!.uid).update({
+        'name': displayName,
+        'bio': bio,
         'updatedAt': FieldValue.serverTimestamp(),
-      };
+      });
 
-      await _firestore
-          .collection('users')
-          .doc(_user!.uid)
-          .update(updates);
-
-      _userData = {...?_userData, ...updates};
+      await _fetchUserData();
     } catch (e) {
       debugPrint('Error updating profile: $e');
       rethrow;
@@ -153,12 +170,33 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      await Future.wait([
-        _auth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      await _googleSignIn.signOut();
+      await _auth.signOut();
+      _userData = null;
     } catch (e) {
       debugPrint('Error signing out: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateNotificationPreferences(Map<String, bool> preferences) async {
+    if (_user == null) throw Exception('No user logged in');
+
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _firestore.collection('users').doc(_user!.uid).update({
+        'notifications': preferences,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await _fetchUserData();
+    } catch (e) {
+      debugPrint('Error updating notification preferences: $e');
       rethrow;
     } finally {
       _isLoading = false;
